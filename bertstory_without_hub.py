@@ -10,7 +10,7 @@ Original file is located at
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import tensorflow as tf
-import tensorflow_hub as hub
+#import tensorflow_hub as hub
 from datetime import datetime
 from IPython.core.debugger import set_trace
 import bert
@@ -26,20 +26,12 @@ import re
 os.environ['TFHUB_CACHE_DIR'] = '/home/djjindal/bert/script-learning'
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # This is a path to an uncased (all lowercase) version of BERT
-BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
+BERT_MODEL_HUB = "uncased_L-12_H-768_A-12"
+
 
 def create_tokenizer_from_hub_module():
   """Get the vocab file and casing info from the Hub module."""
-  #set_trace()
-  with tf.Graph().as_default():
-    bert_module = hub.Module(BERT_MODEL_HUB)
-    tokenization_info = bert_module(signature="tokenization_info", as_dict=True)
-    with tf.Session() as sess:
-      vocab_file, do_lower_case = sess.run([tokenization_info["vocab_file"],
-                                            tokenization_info["do_lower_case"]])
-      
-  return bert.tokenization.FullTokenizer(
-      vocab_file=vocab_file, do_lower_case=do_lower_case)
+  return bert.tokenization.FullTokenizer(vocab_file= BERT_MODEL_HUB + "/vocab.txt", do_lower_case=False)
 
 tokenizer = create_tokenizer_from_hub_module()
 
@@ -170,7 +162,7 @@ def create_model(is_predicting, input_ids, input_mask, segment_ids, labels,
   with tf.variable_scope("loss"):
 
     # Dropout helps prevent overfitting
-    output_layer = tf.nn.dropout(output_layer, keep_prob=0.9)
+    output_layer = tf.nn.dropout(output_layer, rate=0.1)
 
     logits = tf.matmul(output_layer, output_weights, transpose_b=True)
     logits = tf.nn.bias_add(logits, output_bias)
@@ -322,7 +314,7 @@ current_time = datetime.now()
 estimator.train(input_fn=train_input_fn, max_steps=num_train_steps)
 print("Training took time ", datetime.now() - current_time)
 
-valfile = 'dataset/cloze_test_test__spring2016 - cloze_test_ALL_test.csv'
+valfile = 'dataset/cloze_test_val__spring2016 - cloze_test_ALL_test.csv'
 valData =  createData(valfile)
 print(len(valData))
 
@@ -332,7 +324,7 @@ test_input_fn = run_classifier.input_fn_builder(
     is_training=False,
     drop_remainder=False)
 
-print(estimator.evaluate(input_fn=test_input_fn, steps=1800))
+estimator.evaluate(input_fn=test_input_fn, steps=1800)
 
 
 
@@ -352,6 +344,6 @@ test_input_fn = run_classifier.input_fn_builder(
     is_training=False,
     drop_remainder=False)
 
-print(estimator.evaluate(input_fn=test_input_fn, steps=1800))
+estimator.evaluate(input_fn=test_input_fn, steps=1800)
 
-#[(sentence, prediction['probabilities'], labels[prediction['labels']]) for sentence, prediction in zip(train, predictions)]
+[(sentence, prediction['probabilities'], labels[prediction['labels']]) for sentence, prediction in zip(train, predictions)]
