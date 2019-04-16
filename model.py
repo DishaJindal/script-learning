@@ -1,3 +1,24 @@
+from sklearn.model_selection import train_test_split
+import pandas as pd
+import tensorflow as tf
+import tensorflow_hub as hub
+from datetime import datetime
+from IPython.core.debugger import set_trace
+import bert
+from bert import run_classifier
+from bert import optimization
+from bert import tokenization
+from tensorflow import keras
+import os
+import re
+from model import *
+from prepare_data import *
+
+os.environ['TFHUB_CACHE_DIR'] = '/home/djjindal/bert/script-learning'
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+# This is a path to an uncased (all lowercase) version of BERT
+BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
+
 def create_model(is_predicting, input_ids, input_mask, segment_ids, labels,
                  num_labels):
   """Creates a classification model."""

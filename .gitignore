@@ -1,2 +1,10 @@
 *.pickle
 *.pyc
+*.data*
+*.descriptor.txt
+*.pb
+*vocab.txt
+*.index
+
+output/*
+dataset/*
