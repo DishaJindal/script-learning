@@ -5,7 +5,6 @@ import tensorflow_hub as hub
 from datetime import datetime
 from IPython.core.debugger import set_trace
 import bert
-from bert import run_classifier
 from bert import optimization
 from bert import tokenization
 from tensorflow import keras
@@ -13,33 +12,43 @@ import os
 import re
 from model import *
 from prepare_data import *
+from sklearn.metrics import classification_report
 
 os.environ['TFHUB_CACHE_DIR'] = '/home/djjindal/bert/script-learning'
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # This is a path to an uncased (all lowercase) version of BERT
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
 
-def create_model(is_predicting, input_ids, input_mask, segment_ids, labels,
+def create_model3(is_predicting, input_ids, input_mask, segment_ids, labels,
                  num_labels):
-  """Creates a classification model."""
 
   bert_module = hub.Module(
       BERT_MODEL_HUB,
       trainable=True)
-  bert_inputs = dict(
-      input_ids=input_ids,
-      input_mask=input_mask,
-      segment_ids=segment_ids)
-  bert_outputs = bert_module(
-      inputs=bert_inputs,
-      signature="tokens",
-      as_dict=True)
+    
+  for i in range(0,5):
+    input_ids_c = input_ids[:,i,:]
+    input_mask_c = input_mask[:,i,:]
+    segment_ids_c = segment_ids[:,i,:]
+    bert_inputs = dict(
+          input_ids=input_ids_c,
+          input_mask=input_mask_c,
+          segment_ids=segment_ids_c)
+    bert_outputs = bert_module(
+          inputs=bert_inputs,
+          signature="tokens",
+          as_dict=True)
 
-  # Use "pooled_output" for classification tasks on an entire sentence.
-  # Use "sequence_outputs" for token-level output.
-  output_layer = bert_outputs["pooled_output"]
-
+    # Use "pooled_output" for classification tasks on an entire sentence.
+    # Use "sequence_outputs" for token-level output.
+    output_layer_temp = bert_outputs["pooled_output"]
+    if i == 0:
+        output_layer = output_layer_temp
+    else:
+        output_layer = tf.concat([output_layer, output_layer_temp], axis=1) 
+  
   hidden_size = output_layer.shape[-1].value
+#   set_trace()
 
   # Create our own layer to tune for politeness data.
   output_weights = tf.get_variable(
@@ -71,10 +80,7 @@ def create_model(is_predicting, input_ids, input_mask, segment_ids, labels,
     loss = tf.reduce_mean(per_example_loss)
     return (loss, predicted_labels, log_probs)
 
-# model_fn_builder actually creates our model function
-# using the passed parameters for num_labels, learning_rate, etc.
-def model_fn_builder(num_labels, learning_rate, num_train_steps,
-                     num_warmup_steps):
+def model_fn_builder(num_labels, learning_rate, num_train_steps, num_warmup_steps):
   """Returns `model_fn` closure for TPUEstimator."""
   def model_fn(features, labels, mode, params):  # pylint: disable=unused-argument
     """The `model_fn` for TPUEstimator."""
@@ -88,64 +94,27 @@ def model_fn_builder(num_labels, learning_rate, num_train_steps,
     
     # TRAIN and EVAL
     if not is_predicting:
-
-      (loss, predicted_labels, log_probs) = create_model(
+      (loss, predicted_labels, log_probs) = create_model3(
         is_predicting, input_ids, input_mask, segment_ids, label_ids, num_labels)
 
       train_op = bert.optimization.create_optimizer(
           loss, learning_rate, num_train_steps, num_warmup_steps, use_tpu=False)
 
       # Calculate evaluation metrics. 
-      def metric_fn(label_ids, predicted_labels):
+      def metric_fn_multi(label_ids, predicted_labels):
         accuracy = tf.metrics.accuracy(label_ids, predicted_labels)
-        f1_score = tf.contrib.metrics.f1_score(
-            label_ids,
-            predicted_labels)
-        auc = tf.metrics.auc(
-            label_ids,
-            predicted_labels)
-        recall = tf.metrics.recall(
-            label_ids,
-            predicted_labels)
-        precision = tf.metrics.precision(
-            label_ids,
-            predicted_labels) 
-        true_pos = tf.metrics.true_positives(
-            label_ids,
-            predicted_labels)
-        true_neg = tf.metrics.true_negatives(
-            label_ids,
-            predicted_labels)   
-        false_pos = tf.metrics.false_positives(
-            label_ids,
-            predicted_labels)  
-        false_neg = tf.metrics.false_negatives(
-            label_ids,
-            predicted_labels)
-        return {
-            "eval_accuracy": accuracy,
-            "f1_score": f1_score,
-            "auc": auc,
-            "precision": precision,
-            "recall": recall,
-            "true_positives": true_pos,
-            "true_negatives": true_neg,
-            "false_positives": false_pos,
-            "false_negatives": false_neg
-        }
-
-      eval_metrics = metric_fn(label_ids, predicted_labels)
+        return {"eval_accuracy": accuracy}
+      
+      eval_metrics = metric_fn_multi(label_ids, predicted_labels)
 
       if mode == tf.estimator.ModeKeys.TRAIN:
         return tf.estimator.EstimatorSpec(mode=mode,
-          loss=loss,
-          train_op=train_op)
+          loss=loss, train_op=train_op)
       else:
           return tf.estimator.EstimatorSpec(mode=mode,
-            loss=loss,
-            eval_metric_ops=eval_metrics)
+            loss=loss, eval_metric_ops=eval_metrics)
     else:
-      (predicted_labels, log_probs) = create_model(
+      (predicted_labels, log_probs) = create_model3(
         is_predicting, input_ids, input_mask, segment_ids, label_ids, num_labels)
 
       predictions = {
