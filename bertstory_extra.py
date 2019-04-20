@@ -23,7 +23,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # This is a path to an uncased (all lowercase) version of BERT
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
 
-BATCH_SIZE = 1
+BATCH_SIZE = 5
 LEARNING_RATE = 2e-5
 NUM_TRAIN_EPOCHS = 1.0
 WARMUP_PROPORTION = 0.1 # Warmup is a period of time where hte learning rate is small and gradually increases--usually helps training.
@@ -31,14 +31,14 @@ WARMUP_PROPORTION = 0.1 # Warmup is a period of time where hte learning rate is 
 # Model configs
 SAVE_CHECKPOINTS_STEPS = 100
 SAVE_SUMMARY_STEPS = 100
-MAX_SEQ_LENGTH = 128
+
 # Data Preparation
 current_time = datetime.now()
-train_dataset = read_data_iterator("dataset/gw_extractions_no_rep.pickle")
+train_dataset = read_data_iterator("dataset/gw_extractions.temp.pickle")
 def tokenize_if_small_enough(ds):
     small_counter = 0
     big_counter = 0
-    for i, d in zip(range(100000), ds):
+    for i, d in zip(range(20000), ds):
         try:
             yield prepare_data.tokenize_dataset_dict(d)
             small_counter += 1
@@ -102,6 +102,7 @@ current_time = datetime.now()
 train_spec = tf.estimator.TrainSpec(input_fn=train_input_fn, max_steps=num_train_steps)
 eval_spec = tf.estimator.EvalSpec(input_fn=eval_input_fn)
 tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
+# estimator.train(input_fn=train_input_fn, max_steps=num_train_steps)
 print("Training took time ", datetime.now() - current_time)
 
 print(f'Evaluating Training Dataset!')
