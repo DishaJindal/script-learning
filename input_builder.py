@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import tensorflow_hub as hub
 from datetime import datetime
-from IPython.core.debugger import set_trace
+from pdb import set_trace
 import bert
 from bert import run_classifier
 from bert import optimization
