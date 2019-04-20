@@ -45,24 +45,23 @@ MAX_SEQ_LENGTH = 128
 current_time = datetime.now()
 train_dataset = read_data_iterator(args.data)
 def tokenize_if_small_enough(ds):
-    small_counter = 0
-    big_counter = 0
-    for i, d in zip(range(3000), ds):
+    for d in ds:
         try:
             yield prepare_data.tokenize_dataset_dict(d, args.sentence, args.no_context)
-            small_counter += 1
         except AssertionError:
-            big_counter += 1
             continue
-    print("Big:", big_counter, "Small:", small_counter)
             
 features = list(tokenize_if_small_enough(train_dataset))
 sample_size = len(features)
 training_pct = 0.8
+val_pct = 0.1
+test_pct = 0.1
 train_set_size = int(sample_size * training_pct)
-test_set_size = int(sample_size * (1-training_pct))
+val_set_size = int(sample_size * (val_pct))
+test_set_size = sample_size - train_set_size - val_set_size
 train_features = features[:train_set_size]
-val_features = features[train_set_size:]
+val_features = features[train_set_size:val_set_size]
+test_features = features[val_set_size:test_set_size]
 print("Data Size: ", sample_size)
 print(f'Training data is till index {train_set_size}, Validation data is till index {sample_size}')
 print("Data Preparation took time ", datetime.now() - current_time)
