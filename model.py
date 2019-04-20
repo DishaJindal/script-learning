@@ -106,11 +106,11 @@ def model_fn_builder(num_labels, learning_rate, num_train_steps, num_warmup_step
         return {name: accuracy}
       
       if mode == tf.estimator.ModeKeys.TRAIN:
-        tf.summary.scalar("Train Loss", loss)
+        tf.summary.scalar("Train_Loss", loss)
         return tf.estimator.EstimatorSpec(mode=mode,
           loss=loss, train_op=train_op, eval_metric_ops=metric_fn_multi(label_ids, predicted_labels, "train_accuracy"))
       else:
-        tf.summary.scalar("Eval Loss", loss)
+        tf.summary.scalar("Eval_Loss", loss)
         return tf.estimator.EstimatorSpec(mode=mode,
             loss=loss, eval_metric_ops=metric_fn_multi(label_ids, predicted_labels, "eval_accuracy"))
     else:

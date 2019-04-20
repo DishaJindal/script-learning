@@ -5,7 +5,7 @@ import tensorflow_hub as hub
 from datetime import datetime
 from IPython.core.debugger import set_trace
 import bert
-import run_classifier
+import input_builder
 from bert import optimization
 from bert import tokenization
 from tensorflow import keras
@@ -94,7 +94,7 @@ def convert_single_example2(event_chain, candidates, entity, label, max_seq_leng
       input_mask_list.append(input_mask)
       segment_id_list.append(segment_ids)
 
-  feature = run_classifier.InputFeatures(
+  feature = input_builder.InputFeatures(
           input_ids=input_id_list,
           input_mask=input_mask_list,
           segment_ids=segment_id_list,

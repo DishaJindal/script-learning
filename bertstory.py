@@ -6,7 +6,6 @@ import tensorflow_hub as hub
 from datetime import datetime
 from IPython.core.debugger import set_trace
 import bert
-from bert import run_classifier
 from bert import optimization
 from bert import tokenization
 from tensorflow import keras
@@ -46,7 +45,8 @@ MAX_SEQ_LENGTH = 128
 current_time = datetime.now()
 train_dataset = read_data_iterator(args.data)
 def tokenize_if_small_enough(ds):
-    for d in ds:
+#     for d in ds:
+    for i, d in zip(range(10000), ds):
         try:
             yield prepare_data.tokenize_dataset_dict(d, args.sentence, args.no_context)
         except AssertionError:
@@ -60,9 +60,10 @@ test_pct = 0.1
 train_set_size = int(sample_size * training_pct)
 val_set_size = int(sample_size * (val_pct))
 test_set_size = sample_size - train_set_size - val_set_size
+
 train_features = features[:train_set_size]
-val_features = features[train_set_size:val_set_size]
-test_features = features[val_set_size:test_set_size]
+val_features = features[train_set_size:train_set_size+val_set_size]
+test_features = features[train_set_size+val_set_size:train_set_size+val_set_size+test_set_size]
 print("Data Size: ", sample_size)
 print(f'Training data is till index {train_set_size}, Validation data is till index {sample_size}')
 print("Data Preparation took time ", datetime.now() - current_time)
@@ -90,21 +91,21 @@ estimator = tf.estimator.Estimator(
   params={"batch_size": BATCH_SIZE})
 
 # Create an input function for training. drop_remainder = True for using TPUs.
-train_input_fn = run_classifier.input_fn_builder(
+train_input_fn = input_builder.input_fn_builder(
     features=train_features,
     seq_length=MAX_SEQ_LENGTH,
     is_training=True,
     drop_remainder=False,
     candidates=args.candidates)
 
-eval_input_fn = run_classifier.input_fn_builder(
+eval_input_fn = input_builder.input_fn_builder(
     features=val_features,
     seq_length=MAX_SEQ_LENGTH,
     is_training=False,
     drop_remainder=False,
     candidates=args.candidates)
 
-train_test_input_fn = run_classifier.input_fn_builder(
+train_test_input_fn = input_builder.input_fn_builder(
     features=train_features,
     seq_length=MAX_SEQ_LENGTH,
     is_training=False,
