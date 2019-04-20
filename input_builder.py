@@ -32,6 +32,15 @@ class InputFeatures(object):
     self.label_id = label_id
     self.is_real_example = is_real_example
     
+    def __repr__(self):
+        return str(self.__dict__)
+    
+    def __str__(self):
+        return "Class %d, tokens"%self.label_id + str(self.input_ids)
+    
+    def __unicode__(self):
+        return "test"
+    
 def input_fn_builder(features, seq_length, is_training, drop_remainder, candidates):
   """Creates an `input_fn` closure to be passed to TPUEstimator."""
 

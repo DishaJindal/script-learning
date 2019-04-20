@@ -14,6 +14,7 @@ import re
 from model import *
 import sys
 import prepare_data as prepare_data
+from prepare_data import tokenize_if_small_enough
 from read import *
 import argparse
 
@@ -44,15 +45,9 @@ MAX_SEQ_LENGTH = 128
 # Data Preparation
 current_time = datetime.now()
 train_dataset = read_data_iterator(args.data)
-def tokenize_if_small_enough(ds):
-#     for d in ds:
-    for i, d in zip(range(10000), ds):
-        try:
-            yield prepare_data.tokenize_dataset_dict(d, args.sentence, args.no_context)
-        except AssertionError:
-            continue
+
             
-features = list(tokenize_if_small_enough(train_dataset))
+features = list(tokenize_if_small_enough(train_dataset, args.sentence, args.no_context))
 sample_size = len(features)
 training_pct = 0.8
 val_pct = 0.1
@@ -80,7 +75,7 @@ run_config = tf.estimator.RunConfig(
     log_step_count_steps=100)
 
 model_fn = model_fn_builder(
-  num_labels=len(train_features),
+  num_labels=args.candidates,
   learning_rate=LEARNING_RATE,
   num_train_steps=num_train_steps,
   num_warmup_steps=num_warmup_steps)
@@ -123,3 +118,8 @@ print(f'Evaluating Training Dataset!')
 print(estimator.evaluate(input_fn=train_test_input_fn))
 print(f'Evaluating Validation Dataset!')
 print(estimator.evaluate(input_fn=eval_input_fn))
+
+print(f'Predicting')
+predictions = estimator.predict(input_fn=eval_input_fn)
+set_trace()
+print(predictions)
