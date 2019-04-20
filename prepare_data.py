@@ -12,7 +12,6 @@ from tensorflow import keras
 import os
 import re
 
-
 import pandas as pd
 MAX_SEQ_LENGTH = 128
 
@@ -35,79 +34,27 @@ def create_tokenizer_from_hub_module():
       vocab_file=vocab_file, do_lower_case=do_lower_case)
 
 tokenizer = create_tokenizer_from_hub_module()
-
-"""# Make Data InputFeatures"""
-#If candidates is list of strings, entity can be None
-def convert_single_example(example, candidates, entity, label, max_seq_length,
-                           tokenizer):
-  tokens = []
-  segment_ids = []
-  tokens.append("[CLS]")
-  segment_ids.append(0)
-  i = 0
-    
-  for line in example:
-    for orig_token in line.split(" "):
-      temp = tokenizer.tokenize(orig_token)
-      for t in temp:
-        tokens.append(t)
-        segment_ids.append(i)
-    tokens.append("[SEP]")
-    segment_ids.append(i)
-    
-  i = i+1
-  for candidate in candidates:
-    if type(candidate) == str:
-      for orig_token in candidate.split(" "):
-        temp = tokenizer.tokenize(orig_token)
-        for t in temp:
-          tokens.append(t)
-          segment_ids.append(i)
-      i += 1
-    elif type(candidate) == tuple or type(candidate) == list:
-      for svo in candidate:
-        if svo is None:
-          svo = entity
-        for orig_token in svo.split(" "):
+def get_token_ids(sentence, tokenizer, entity):
+    tokens = []
+    if type(sentence) == str:
+        for orig_token in sentence.split(" "):
           temp = tokenizer.tokenize(orig_token)
           for t in temp:
             tokens.append(t)
-            segment_ids.append(i)
-          tokens.append("[SEP]")
-          segment_ids.append(i)
-      i += 1
-    else:
-      raise TypeError("candidates is not string tuple, or list")
-  
-  input_ids = tokenizer.convert_tokens_to_ids(tokens)
+    elif type(sentence) == tuple or type(sentence) == list:
+        for svo in sentence:
+          if svo is None:
+              svo = entity
+          for orig_token in svo.split(" "):
+              temp = tokenizer.tokenize(orig_token)
+              for t in temp:
+                tokens.append(t)
+    return tokens
 
-  input_mask = [1] * len(input_ids)
-
-#  print(len(input_mask), len(segment_ids))
-#  print(input_ids)
-  assert len(input_ids) <= max_seq_length
-  assert len(input_mask) <= max_seq_length
-  assert len(segment_ids) <= max_seq_length
-  while len(input_ids) < max_seq_length:
-    input_ids.append(0)
-    input_mask.append(0)
-    segment_ids.append(0)
-
-
-#   print("input_ids", input_ids)
-#   print("input_mask", input_mask)
-#   print("segment_ids", segment_ids)
-#   print("label", label-1)
-#   set_trace()
-  feature = run_classifier.InputFeatures(
-      input_ids=input_ids,
-      input_mask=input_mask,
-      segment_ids=segment_ids,
-      label_id=label+1,
-      is_real_example=True)
-  return feature
-
-def convert_single_example2(example, candidates, entity, label, max_seq_length,
+    
+"""# Make Data InputFeatures"""
+#If candidates is list of strings, entity can be None
+def convert_single_example2(event_chain, candidates, entity, label, max_seq_length, no_context,
                            tokenizer):
   tokens_e = []
   segment_ids_e = []
@@ -116,33 +63,26 @@ def convert_single_example2(example, candidates, entity, label, max_seq_length,
   segment_id_list = []
   tokens_e.append("[CLS]")
   segment_ids_e.append(0)
-    
-  for line in example:
-    for orig_token in line.split(" "):
-      temp = tokenizer.tokenize(orig_token)
-      for t in temp:
-        tokens_e.append(t)
-        segment_ids_e.append(0)
-    tokens_e.append("[SEP]")
-    segment_ids_e.append(0)
+  
+  # Fill Token Ids and Segment Ids from event chain
+  if no_context != "True":
+      for event in event_chain:
+          tokens_e.extend(get_token_ids(event, tokenizer, entity))
+          tokens_e.append("[SEP]")
+      segment_ids_e = [0]*len(tokens_e)
     
   for candidate in candidates:
-    if type(candidate) == tuple or type(candidate) == list:
       tokens = []
       segment_ids = []
       tokens.extend(tokens_e)
       segment_ids.extend(segment_ids_e)
-      for svo in candidate:
-        if svo is None:
-          svo = entity
-        for orig_token in svo.split(" "):
-          temp = tokenizer.tokenize(orig_token)
-          for t in temp:
-            tokens.append(t)
-            segment_ids.append(1)
+      candidate_tokens = get_token_ids(candidate, tokenizer, entity)
+      tokens.extend(candidate_tokens)
+      segment_ids.extend([1]*len(candidate_tokens))
+            
       input_ids = tokenizer.convert_tokens_to_ids(tokens)
       input_mask = [1] * len(input_ids)
-#       set_trace()
+        
       assert len(input_ids) <= max_seq_length
       assert len(input_mask) <= max_seq_length
       assert len(segment_ids) <= max_seq_length
@@ -162,37 +102,14 @@ def convert_single_example2(example, candidates, entity, label, max_seq_length,
           is_real_example=True)
   return feature
 
-# def convert_examples_to_features(examples, candidates, label_list, max_seq_length,
-#                                  tokenizer):
-#   """Convert a set of `InputExample`s to a list of `InputFeatures`."""
-
-#   features = []
-#   for (example) in (examples):
-#     feature = convert_single_example(example, candidates[i], label_list[i], max_seq_length, tokenizer)
-#     features.append(feature)
-#   return features
-
-
-
-# def createData(file):
-#   data = pd.read_csv(file)
-#   train = (data[['InputSentence1', 'InputSentence2', 'InputSentence3', 'InputSentence4']]).values.tolist()
-#   candidates = (data[['RandomFifthSentenceQuiz1', 'RandomFifthSentenceQuiz2']]).values.tolist()
-#   label_lists = (data[['AnswerRightEnding']]).values.tolist()
-
-#   label_list = []
-#   for label in label_lists:
-#     label_list.append(label[0])
-
-#   train_features = convert_examples_to_features(train, candidates,label_list, MAX_SEQ_LENGTH, tokenizer)
-#   return train_features
-
-
-def tokenize_dataset_dict(ec_dict):
+def tokenize_dataset_dict(ec_dict, sentence, no_context):
   train_sents = ec_dict['sentences']
   train_triples = ec_dict['triples']
   candidates = ec_dict['candidates']
   correct_ending = ec_dict['correct']
   entity = ec_dict['entity']
-  train_features = convert_single_example2(train_sents[:,-1], candidates, entity, correct_ending, MAX_SEQ_LENGTH, tokenizer)
+  if sentence == "True":
+      train_features = convert_single_example2(train_sents[:-1], candidates, entity, correct_ending, MAX_SEQ_LENGTH, no_context, tokenizer)
+  else:
+      train_features = convert_single_example2(train_triples[:-1], candidates, entity, correct_ending, MAX_SEQ_LENGTH, no_context, tokenizer)
   return train_features

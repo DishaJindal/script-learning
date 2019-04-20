@@ -101,18 +101,18 @@ def model_fn_builder(num_labels, learning_rate, num_train_steps, num_warmup_step
           loss, learning_rate, num_train_steps, num_warmup_steps, use_tpu=False)
 
       # Calculate evaluation metrics. 
-      def metric_fn_multi(label_ids, predicted_labels):
+      def metric_fn_multi(label_ids, predicted_labels, name):
         accuracy = tf.metrics.accuracy(label_ids, predicted_labels)
-        return {"eval_accuracy": accuracy}
+        return {name: accuracy}
       
-      eval_metrics = metric_fn_multi(label_ids, predicted_labels)
-
       if mode == tf.estimator.ModeKeys.TRAIN:
+        tf.summary.scalar("Train Loss", loss)
         return tf.estimator.EstimatorSpec(mode=mode,
-          loss=loss, train_op=train_op)
+          loss=loss, train_op=train_op, eval_metric_ops=metric_fn_multi(label_ids, predicted_labels, "train_accuracy"))
       else:
-          return tf.estimator.EstimatorSpec(mode=mode,
-            loss=loss, eval_metric_ops=eval_metrics)
+        tf.summary.scalar("Eval Loss", loss)
+        return tf.estimator.EstimatorSpec(mode=mode,
+            loss=loss, eval_metric_ops=metric_fn_multi(label_ids, predicted_labels, "eval_accuracy"))
     else:
       (predicted_labels, log_probs) = create_model3(
         is_predicting, input_ids, input_mask, segment_ids, label_ids, num_labels)
@@ -121,6 +121,7 @@ def model_fn_builder(num_labels, learning_rate, num_train_steps, num_warmup_step
           'probabilities': log_probs,
           'labels': predicted_labels
       }
+
       return tf.estimator.EstimatorSpec(mode, predictions=predictions)
 
   # Return the actual model function in the closure

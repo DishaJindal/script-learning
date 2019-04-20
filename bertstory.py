@@ -13,13 +13,22 @@ from tensorflow import keras
 import os
 import re
 from model import *
-from prepare_data import *
-import prepare_data
+import sys
+import prepare_data as prepare_data
 from read import *
+import argparse
+
+parser = argparse.ArgumentParser(description='ScriptLearning')
+parser.add_argument('--data', type=str, default="dataset/gw_extractions_no_rep_no_fin.pickle")
+parser.add_argument('--sentence', type=str, default="True")
+parser.add_argument('--output_dir',type=str, default="output")
+parser.add_argument('--device', type=str, default="1")
+parser.add_argument('--no_context', type=str, default="False")
+args = parser.parse_args()
 
 tf.logging.set_verbosity(tf.logging.INFO)
 os.environ['TFHUB_CACHE_DIR'] = '/home/djjindal/bert/script-learning'
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = args.device
 # This is a path to an uncased (all lowercase) version of BERT
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
 
@@ -34,13 +43,13 @@ SAVE_SUMMARY_STEPS = 100
 MAX_SEQ_LENGTH = 128
 # Data Preparation
 current_time = datetime.now()
-train_dataset = read_data_iterator("dataset/gw_extractions_no_rep.pickle")
+train_dataset = read_data_iterator(args.data)
 def tokenize_if_small_enough(ds):
     small_counter = 0
     big_counter = 0
-    for i, d in zip(range(100000), ds):
+    for i, d in zip(range(3000), ds):
         try:
-            yield prepare_data.tokenize_dataset_dict(d)
+            yield prepare_data.tokenize_dataset_dict(d, args.sentence, args.no_context)
             small_counter += 1
         except AssertionError:
             big_counter += 1
@@ -55,6 +64,7 @@ test_set_size = int(sample_size * (1-training_pct))
 train_features = features[:train_set_size]
 val_features = features[train_set_size:]
 print("Data Size: ", sample_size)
+print(f'Training data is till index {train_set_size}, Validation data is till index {sample_size}')
 print("Data Preparation took time ", datetime.now() - current_time)
 
 # Compute # train and warmup steps from batch size
@@ -63,9 +73,10 @@ num_warmup_steps = int(num_train_steps * WARMUP_PROPORTION)
 print(f'Number of training steps is {num_train_steps}, and number of warmup steps is {num_warmup_steps}')
 
 run_config = tf.estimator.RunConfig(
-    model_dir='output',
+    model_dir=args.output_dir,
     save_summary_steps=SAVE_SUMMARY_STEPS,
-    save_checkpoints_steps=SAVE_CHECKPOINTS_STEPS)
+    save_checkpoints_steps=SAVE_CHECKPOINTS_STEPS,
+    log_step_count_steps=100)
 
 model_fn = model_fn_builder(
   num_labels=len(train_features),
@@ -100,7 +111,7 @@ train_test_input_fn = run_classifier.input_fn_builder(
 print(f'Beginning Training!')
 current_time = datetime.now()
 train_spec = tf.estimator.TrainSpec(input_fn=train_input_fn, max_steps=num_train_steps)
-eval_spec = tf.estimator.EvalSpec(input_fn=eval_input_fn)
+eval_spec = tf.estimator.EvalSpec(input_fn=eval_input_fn, throttle_secs=0)# Using default steps=100
 tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 print("Training took time ", datetime.now() - current_time)
 
