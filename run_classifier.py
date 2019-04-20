@@ -32,7 +32,7 @@ class InputFeatures(object):
     self.label_id = label_id
     self.is_real_example = is_real_example
     
-def input_fn_builder(features, seq_length, is_training, drop_remainder):
+def input_fn_builder(features, seq_length, is_training, drop_remainder, candidates):
   """Creates an `input_fn` closure to be passed to TPUEstimator."""
 
   all_input_ids = []
@@ -51,7 +51,6 @@ def input_fn_builder(features, seq_length, is_training, drop_remainder):
     batch_size = params["batch_size"]
 
     num_examples = len(features)
-#     set_trace()
 
     # This is for demo purposes and does NOT scale to large data sets. We do
     # not use Dataset.from_generator() because that uses tf.py_func which is
@@ -59,17 +58,17 @@ def input_fn_builder(features, seq_length, is_training, drop_remainder):
     d = tf.data.Dataset.from_tensor_slices({
         "input_ids":
             tf.constant(
-                all_input_ids, shape=[num_examples, 5, seq_length],
+                all_input_ids, shape=[num_examples, candidates, seq_length],
                 dtype=tf.int32),
         "input_mask":
             tf.constant(
                 all_input_mask,
-                shape=[num_examples, 5, seq_length],
+                shape=[num_examples, candidates, seq_length],
                 dtype=tf.int32),
         "segment_ids":
             tf.constant(
                 all_segment_ids,
-                shape=[num_examples, 5, seq_length],
+                shape=[num_examples, candidates, seq_length],
                 dtype=tf.int32),
         "label_ids":
             tf.constant(all_label_ids, shape=[num_examples], dtype=tf.int32),

@@ -24,6 +24,7 @@ parser.add_argument('--sentence', type=str, default="True")
 parser.add_argument('--output_dir',type=str, default="output")
 parser.add_argument('--device', type=str, default="1")
 parser.add_argument('--no_context', type=str, default="False")
+parser.add_argument('--candidates', type=int, default=5) # Narrative Cloze Task has 5 options
 args = parser.parse_args()
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -93,19 +94,22 @@ train_input_fn = run_classifier.input_fn_builder(
     features=train_features,
     seq_length=MAX_SEQ_LENGTH,
     is_training=True,
-    drop_remainder=False)
+    drop_remainder=False,
+    candidates=args.candidates)
 
 eval_input_fn = run_classifier.input_fn_builder(
     features=val_features,
     seq_length=MAX_SEQ_LENGTH,
     is_training=False,
-    drop_remainder=False)
+    drop_remainder=False,
+    candidates=args.candidates)
 
 train_test_input_fn = run_classifier.input_fn_builder(
     features=train_features,
     seq_length=MAX_SEQ_LENGTH,
     is_training=False,
-    drop_remainder=False)
+    drop_remainder=False,
+    candidates=args.candidates)
 
 print(f'Beginning Training!')
 current_time = datetime.now()
