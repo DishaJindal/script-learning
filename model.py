@@ -3,7 +3,7 @@ import pandas as pd
 import tensorflow as tf
 import tensorflow_hub as hub
 from datetime import datetime
-from IPython.core.debugger import set_trace
+from pdb import set_trace
 import bert
 from bert import optimization
 from bert import tokenization
