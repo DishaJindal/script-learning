@@ -14,8 +14,8 @@ from model import *
 from prepare_data import *
 from sklearn.metrics import classification_report
 
-os.environ['TFHUB_CACHE_DIR'] = '/home/djjindal/bert/script-learning'
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+#os.environ['TFHUB_CACHE_DIR'] = '/home/djjindal/bert/script-learning'
+#os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # This is a path to an uncased (all lowercase) version of BERT
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
 
@@ -61,7 +61,8 @@ def create_model3(is_predicting, input_ids, input_mask, segment_ids, labels,
   with tf.variable_scope("loss"):
 
     # Dropout helps prevent overfitting
-    output_layer = tf.nn.dropout(output_layer, keep_prob=0.9)
+    if not is_predicting:
+        output_layer = tf.nn.dropout(output_layer, keep_prob=0.9)
 
     logits = tf.matmul(output_layer, output_weights, transpose_b=True)
     logits = tf.nn.bias_add(logits, output_bias)

@@ -16,7 +16,7 @@ import pandas as pd
 MAX_SEQ_LENGTH = 128
 
 os.environ['TFHUB_CACHE_DIR'] = '/home/djjindal/bert/script-learning'
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+#os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # This is a path to an uncased (all lowercase) version of BERT
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
 
