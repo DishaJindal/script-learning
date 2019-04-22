@@ -23,7 +23,8 @@ parser.add_argument('--data', type=str, default="dataset/gw_extractions_no_rep_n
 parser.add_argument('--sentence', type=str, default="True")
 parser.add_argument('--output_dir',type=str, default="output")
 parser.add_argument('--device', type=str, default="1")
-parser.add_argument('--no_context', type=str, default="False")
+parser.add_argument('--no_context', default=False, action='store_true')
+parser.add_argument('--neeg_dataset', default=False, action='store_true')
 parser.add_argument('--candidates', type=int, default=5) # Narrative Cloze Task has 5 options
 args = parser.parse_args()
 
@@ -47,7 +48,7 @@ current_time = datetime.now()
 train_dataset = read_data_iterator(args.data)
 
             
-features = list(tokenize_if_small_enough(train_dataset, args.sentence, args.no_context))
+features = list(tokenize_if_small_enough(train_dataset, args.sentence, args.no_context, is_neeg=args.neeg_dataset))
 sample_size = len(features)
 training_pct = 0.8
 val_pct = 0.1
