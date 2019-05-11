@@ -20,7 +20,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description='ScriptLearning')
 parser.add_argument('--data', type=str, default="dataset/gw_extractions_no_rep_no_fin.pickle")
-parser.add_argument('--sentence', type=str, default="True")
+parser.add_argument('--sentence', default=True, action='store_true')
 parser.add_argument('--output_dir',type=str, default="output")
 parser.add_argument('--device', type=str, default="1")
 parser.add_argument('--no_context', default=False, action='store_true')
@@ -48,13 +48,13 @@ current_time = datetime.now()
 train_dataset = read_data_iterator(args.data)
 
             
-features = list(tokenize_if_small_enough(train_dataset, args.sentence, args.no_context, is_neeg=args.neeg_dataset))
+features = list(tokenize_if_small_enough(train_dataset, sentences=args.sentence, no_context=args.no_context, is_neeg=args.neeg_dataset))
 sample_size = len(features)
 training_pct = 0.8
 val_pct = 0.1
 test_pct = 0.1
 train_set_size = int(sample_size * training_pct)
-val_set_size = int(sample_size * (val_pct))
+val_set_size = int(sample_size * val_pct)
 test_set_size = sample_size - train_set_size - val_set_size
 
 train_features = features[:train_set_size]

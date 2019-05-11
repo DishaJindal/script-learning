@@ -24,7 +24,7 @@ def tokenize_if_small_enough(ds, sentences=True, no_context=False, is_neeg=False
 #     for d in ds:
     for i, d in zip(range(10000), ds):
         try:
-            yield tokenize_dataset_dict(d, sentences, no_context, is_neeg=is_neeg)
+            yield tokenize_dataset_dict(d, sentence=sentences, no_context=no_context, is_neeg=is_neeg)
         except AssertionError:
             continue
 
@@ -128,10 +128,10 @@ def tokenize_dataset_dict(ec_dict, sentence=True, no_context=False, is_neeg=Fals
   candidates = ec_dict['candidates']
   correct_ending = ec_dict['correct']
   entity = ec_dict['entity']
-  if sentence == "True":
+  if sentence:
       train_features = convert_single_example2(tokenizer, train_sents[:-1], candidates, correct_ending, 
-                                               entity=entity, no_context=no_context, is_neeg=is_neeg)
+                                               entity=entity, max_seq_length=MAX_SEQ_LENGTH, no_context=no_context, is_neeg=is_neeg)
   else:
       train_features = convert_single_example2(tokenizer, train_triples[:-1], candidates, correct_ending, 
-                                               entity=entity, no_context=no_context, is_neeg=is_neeg)
+                                               entity=entity, max_seq_length=MAX_SEQ_LENGTH, no_context=no_context, is_neeg=is_neeg)
   return train_features
