@@ -113,7 +113,7 @@ def convert_single_example2(tokenizer, event_chain, candidates, label, entity=No
           input_ids=input_id_list,
           input_mask=input_mask_list,
           segment_ids=segment_id_list,
-          label_id=label+1,
+          label_id=label,
           is_real_example=True)
   return feature
 
