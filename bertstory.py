@@ -20,7 +20,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description='ScriptLearning')
 parser.add_argument('--data', type=str, default="dataset/gw_extractions_no_rep_no_fin.pickle")
-parser.add_argument('--sentence', default=True, action='store_true')
+parser.add_argument('--sentence', default=False, action='store_true')
 parser.add_argument('--output_dir',type=str, default="output")
 parser.add_argument('--device', type=str, default="1")
 parser.add_argument('--no_context', default=False, action='store_true')
