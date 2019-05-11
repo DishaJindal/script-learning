@@ -20,7 +20,7 @@ os.environ['TFHUB_CACHE_DIR'] = '/home/djjindal/bert/script-learning'
 # This is a path to an uncased (all lowercase) version of BERT
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
 
-def tokenize_if_small_enough(ds, sentences=True, no_context=True, is_neeg=False):
+def tokenize_if_small_enough(ds, sentences=True, no_context=False, is_neeg=False):
 #     for d in ds:
     for i, d in zip(range(10000), ds):
         try:
