@@ -29,7 +29,7 @@ parser.add_argument('--candidates', type=int, default=5) # Narrative Cloze Task 
 args = parser.parse_args()
 
 tf.logging.set_verbosity(tf.logging.INFO)
-os.environ['TFHUB_CACHE_DIR'] = '/home/djjindal/bert/script-learning'
+os.environ['TFHUB_CACHE_DIR'] = '.'
 os.environ["CUDA_VISIBLE_DEVICES"] = args.device
 # This is a path to an uncased (all lowercase) version of BERT
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
