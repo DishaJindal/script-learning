@@ -1,3 +1,19 @@
+import argparse
+import os
+
+parser = argparse.ArgumentParser(description='ScriptLearning')
+parser.add_argument('--data', type=str, default="dataset/gw_extractions_no_rep_no_fin.pickle")
+parser.add_argument('--sentence', default=True, action='store_true')
+parser.add_argument('--output_dir',type=str, default="output")
+parser.add_argument('--device', type=str, default="1")
+parser.add_argument('--no_context', default=False, action='store_true')
+parser.add_argument('--neeg_dataset', default=False, action='store_true')
+parser.add_argument('--candidates', type=int, default=5) # Narrative Cloze Task has 5 options
+args = parser.parse_args()
+
+os.environ['TFHUB_CACHE_DIR'] = '.'
+os.environ["CUDA_VISIBLE_DEVICES"] = args.device
+
 import tensorflow as tf
 tf.enable_eager_execution()
 from sklearn.model_selection import train_test_split
@@ -9,30 +25,17 @@ import bert
 from bert import optimization
 from bert import tokenization
 from tensorflow import keras
-import os
 import re
 from model import *
 import sys
 import prepare_data as prepare_data
 from prepare_data import tokenize_if_small_enough
 from read import *
-import argparse
-
-parser = argparse.ArgumentParser(description='ScriptLearning')
-parser.add_argument('--data', type=str, default="dataset/gw_extractions_no_rep_no_fin.pickle")
-parser.add_argument('--sentence', default=False, action='store_true')
-parser.add_argument('--output_dir',type=str, default="output")
-parser.add_argument('--device', type=str, default="1")
-parser.add_argument('--no_context', default=False, action='store_true')
-parser.add_argument('--neeg_dataset', default=False, action='store_true')
-parser.add_argument('--candidates', type=int, default=5) # Narrative Cloze Task has 5 options
-args = parser.parse_args()
 
 tf.logging.set_verbosity(tf.logging.INFO)
-os.environ['TFHUB_CACHE_DIR'] = '.'
-os.environ["CUDA_VISIBLE_DEVICES"] = args.device
 # This is a path to an uncased (all lowercase) version of BERT
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
+
 
 BATCH_SIZE = 1
 LEARNING_RATE = 2e-5
@@ -46,8 +49,7 @@ MAX_SEQ_LENGTH = 128
 # Data Preparation
 current_time = datetime.now()
 train_dataset = read_data_iterator(args.data)
-
-            
+          
 features = list(tokenize_if_small_enough(train_dataset, sentences=args.sentence, no_context=args.no_context, is_neeg=args.neeg_dataset))
 sample_size = len(features)
 training_pct = 0.8
