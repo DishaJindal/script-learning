@@ -20,9 +20,9 @@ os.environ['TFHUB_CACHE_DIR'] = '.'
 # This is a path to an uncased (all lowercase) version of BERT
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
 
-def tokenize_if_small_enough(ds, sentences=True, no_context=False, is_neeg=False):
+def tokenize_if_small_enough(ds, sentences=True, no_context=False, is_neeg=False, input_size=10000):
 #     for d in ds:
-    for i, d in zip(range(10000), ds):
+    for i, d in zip(range(input_size), ds):
         try:
             yield tokenize_dataset_dict(d, sentence=sentences, no_context=no_context, is_neeg=is_neeg)
         except AssertionError:
@@ -124,7 +124,7 @@ def tokenize_dataset_dict(ec_dict, sentence=True, no_context=False, is_neeg=Fals
       return train_features
   
   train_sents = ec_dict['sentences']
-  train_triples = ec_dict['triples']
+
   candidates = ec_dict['candidates']
   correct_ending = ec_dict['correct']
   entity = ec_dict['entity']
@@ -132,6 +132,7 @@ def tokenize_dataset_dict(ec_dict, sentence=True, no_context=False, is_neeg=Fals
       train_features = convert_single_example2(tokenizer, train_sents[:-1], candidates, correct_ending, 
                                                entity=entity, max_seq_length=MAX_SEQ_LENGTH, no_context=no_context, is_neeg=is_neeg)
   else:
+      train_triples = ec_dict['triples']
       train_features = convert_single_example2(tokenizer, train_triples[:-1], candidates, correct_ending, 
                                                entity=entity, max_seq_length=MAX_SEQ_LENGTH, no_context=no_context, is_neeg=is_neeg)
   return train_features

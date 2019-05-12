@@ -8,7 +8,9 @@ parser.add_argument('--output_dir',type=str, default="output")
 parser.add_argument('--device', type=str, default="1")
 parser.add_argument('--no_context', default=False, action='store_true')
 parser.add_argument('--neeg_dataset', default=False, action='store_true')
+parser.add_argument('--story_cloze', default=False, action='store_true')
 parser.add_argument('--candidates', type=int, default=5) # Narrative Cloze Task has 5 options
+parser.add_argument('--input_size', type=int, default=10000)
 args = parser.parse_args()
 
 os.environ['TFHUB_CACHE_DIR'] = '.'
@@ -48,9 +50,12 @@ SAVE_SUMMARY_STEPS = 100
 MAX_SEQ_LENGTH = 128
 # Data Preparation
 current_time = datetime.now()
-train_dataset = read_data_iterator(args.data)
+if args.story_cloze:
+    train_dataset = story_read_data_iterator(args.data)
+else:    
+    train_dataset = read_data_iterator(args.data)
           
-features = list(tokenize_if_small_enough(train_dataset, sentences=args.sentence, no_context=args.no_context, is_neeg=args.neeg_dataset))
+features = list(tokenize_if_small_enough(train_dataset, sentences=args.sentence, no_context=args.no_context, is_neeg=args.neeg_dataset, input_size=args.input_size))
 sample_size = len(features)
 training_pct = 0.8
 val_pct = 0.1
@@ -124,5 +129,4 @@ print(estimator.evaluate(input_fn=eval_input_fn))
 
 print(f'Predicting')
 predictions = estimator.predict(input_fn=eval_input_fn)
-set_trace()
 print(predictions)
