@@ -25,11 +25,13 @@ parser.add_argument('--output_dir',type=str, default="output")
 parser.add_argument('--device', type=str, default="1")
 parser.add_argument('--no_context', default=False, action='store_true')
 parser.add_argument('--neeg_dataset', default=False, action='store_true')
+parser.add_argument('--conceptnet', default=False, action='store_true')
+
 parser.add_argument('--candidates', type=int, default=5) # Narrative Cloze Task has 5 options
 args = parser.parse_args()
 
 tf.logging.set_verbosity(tf.logging.INFO)
-os.environ['TFHUB_CACHE_DIR'] = '/home/djjindal/bert/script-learning'
+os.environ['TFHUB_CACHE_DIR'] = '.'
 os.environ["CUDA_VISIBLE_DEVICES"] = args.device
 # This is a path to an uncased (all lowercase) version of BERT
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
@@ -48,7 +50,9 @@ current_time = datetime.now()
 train_dataset = read_data_iterator(args.data)
 
             
-features = list(tokenize_if_small_enough(train_dataset, args.sentence, args.no_context, is_neeg=args.neeg_dataset))
+features = list(tokenize_if_small_enough(train_dataset, 
+                                         args.sentence, args.no_context, 
+                                         is_neeg=args.neeg_dataset, conceptnet=args.conceptnet))
 sample_size = len(features)
 training_pct = 0.8
 val_pct = 0.1

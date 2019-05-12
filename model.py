@@ -20,7 +20,7 @@ from sklearn.metrics import classification_report
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
 
 def create_model3(is_predicting, input_ids, input_mask, segment_ids, labels,
-                 num_labels):
+                 num_labels, augmenting_vectors=None):
 
   bert_module = hub.Module(
       BERT_MODEL_HUB,
@@ -42,6 +42,9 @@ def create_model3(is_predicting, input_ids, input_mask, segment_ids, labels,
     # Use "pooled_output" for classification tasks on an entire sentence.
     # Use "sequence_outputs" for token-level output.
     output_layer_temp = bert_outputs["pooled_output"]
+    if augmenting_vectors is not None:
+        output_layer_temp = tf.concat([output_layer_temp, augmenting_vectors[i]], axis=1) 
+    
     if i == 0:
         output_layer = output_layer_temp
     else:
@@ -90,13 +93,14 @@ def model_fn_builder(num_labels, learning_rate, num_train_steps, num_warmup_step
     input_mask = features["input_mask"]
     segment_ids = features["segment_ids"]
     label_ids = features["label_ids"]
+    augmenting_vectors = features.get('augmenting_vectors', None)
 
     is_predicting = (mode == tf.estimator.ModeKeys.PREDICT)
     
     # TRAIN and EVAL
     if not is_predicting:
       (loss, predicted_labels, log_probs) = create_model3(
-        is_predicting, input_ids, input_mask, segment_ids, label_ids, num_labels)
+        is_predicting, input_ids, input_mask, segment_ids, label_ids, num_labels, augmenting_vectors=augmenting_vectors)
 
       train_op = bert.optimization.create_optimizer(
           loss, learning_rate, num_train_steps, num_warmup_steps, use_tpu=False)
@@ -116,7 +120,7 @@ def model_fn_builder(num_labels, learning_rate, num_train_steps, num_warmup_step
             loss=loss, eval_metric_ops=metric_fn_multi(label_ids, predicted_labels, "eval_accuracy"))
     else:
       (predicted_labels, log_probs) = create_model3(
-        is_predicting, input_ids, input_mask, segment_ids, label_ids, num_labels)
+        is_predicting, input_ids, input_mask, segment_ids, label_ids, num_labels, augmenting_vectors=augmenting_vectors)
 
       predictions = {
           'probabilities': log_probs,

@@ -12,24 +12,25 @@ from tensorflow import keras
 import os
 import re
 from functools import reduce
+import numpy as np
 
 import pandas as pd
 MAX_SEQ_LENGTH = 128
 
-os.environ['TFHUB_CACHE_DIR'] = '/home/djjindal/bert/script-learning'
+os.environ['TFHUB_CACHE_DIR'] = '.'
 #os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # This is a path to an uncased (all lowercase) version of BERT
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
 
-CONCEPTNET_TABLE = pd.read_hdf('mini.h5')
-CONCEPTNET_TABLE = conceptnet[conceptnet.index.map(lambda x: x.startswith('/c/en/'))]
-CONCEPTNET_TABLE.index = conceptnet.index.map(lambda x: x.replace('/c/en/', ''))
+CONCEPTNET_TABLE = pd.read_hdf('dataset/mini.h5')
+CONCEPTNET_TABLE = CONCEPTNET_TABLE[CONCEPTNET_TABLE.index.map(lambda x: x.startswith('/c/en/'))]
+CONCEPTNET_TABLE.index = CONCEPTNET_TABLE.index.map(lambda x: x.replace('/c/en/', ''))
 
-def tokenize_if_small_enough(ds, sentences=True, no_context=True, is_neeg=False):
+def tokenize_if_small_enough(ds, sentences=True, no_context=True, is_neeg=False, conceptnet=False):
 #     for d in ds:
     for i, d in zip(range(10000), ds):
         try:
-            yield tokenize_dataset_dict(d, sentences, no_context, is_neeg=is_neeg)
+            yield tokenize_dataset_dict(d, sentences, no_context, is_neeg=is_neeg, conceptnet=conceptnet)
         except AssertionError:
             continue
 
@@ -125,15 +126,15 @@ def convert_single_example2(tokenizer, event_chain, candidates, label, entity=No
           input_ids=input_id_list,
           input_mask=input_mask_list,
           segment_ids=segment_id_list,
-          label_id=label+1,
-          augmenting_vectors,
+          label_id=label,
+          augmenting_vectors=augmenting_vectors,
           is_real_example=True)
   return feature
 
-def tokenize_dataset_dict(ec_dict, sentence=True, no_context=False, is_neeg=False):
+def tokenize_dataset_dict(ec_dict, sentence=True, no_context=False, is_neeg=False, conceptnet=False):
   if is_neeg:
       train_features = convert_single_example2(tokenizer, ec_dict['chain'], ec_dict['candidates'], ec_dict['correct'], 
-                                               no_context=no_context, is_neeg=True)  
+                                               no_context=no_context, is_neeg=True, conceptnet=conceptnet)  
       return train_features
   
   train_sents = ec_dict['sentences']
@@ -143,8 +144,8 @@ def tokenize_dataset_dict(ec_dict, sentence=True, no_context=False, is_neeg=Fals
   entity = ec_dict['entity']
   if sentence == "True":
       train_features = convert_single_example2(tokenizer, train_sents[:-1], candidates, correct_ending, 
-                                               entity=entity, no_context=no_context, is_neeg=is_neeg)
+                                               entity=entity, no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet)
   else:
       train_features = convert_single_example2(tokenizer, train_triples[:-1], candidates, correct_ending, 
-                                               entity=entity, no_context=no_context, is_neeg=is_neeg)
+                                               entity=entity, no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet)
   return train_features
