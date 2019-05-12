@@ -26,7 +26,7 @@ def create_model3(is_predicting, input_ids, input_mask, segment_ids, labels,
       BERT_MODEL_HUB,
       trainable=True)
     
-  for i in range(0,5):
+  for i in range(0,num_labels):
     input_ids_c = input_ids[:,i,:]
     input_mask_c = input_mask[:,i,:]
     segment_ids_c = segment_ids[:,i,:]

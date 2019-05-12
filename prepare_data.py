@@ -26,11 +26,12 @@ CONCEPTNET_TABLE = pd.read_hdf('dataset/mini.h5')
 CONCEPTNET_TABLE = CONCEPTNET_TABLE[CONCEPTNET_TABLE.index.map(lambda x: x.startswith('/c/en/'))]
 CONCEPTNET_TABLE.index = CONCEPTNET_TABLE.index.map(lambda x: x.replace('/c/en/', ''))
 
-def tokenize_if_small_enough(ds, sentences=True, no_context=True, is_neeg=False, conceptnet=False):
+def tokenize_if_small_enough(ds, sentences=True, no_context=True, is_neeg=False, conceptnet=False, input_size=10000):
 #     for d in ds:
-    for i, d in zip(range(10000), ds):
+    for i, d in zip(range(input_size), ds):
         try:
-            yield tokenize_dataset_dict(d, sentences, no_context, is_neeg=is_neeg, conceptnet=conceptnet)
+            yield tokenize_dataset_dict(d, sentence=sentences,
+                                        no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet)
         except AssertionError:
             continue
 
@@ -43,7 +44,7 @@ def create_tokenizer_from_hub_module():
     with tf.Session() as sess:
       vocab_file, do_lower_case = sess.run([tokenization_info["vocab_file"],
                                             tokenization_info["do_lower_case"]])
-      
+  
   return bert.tokenization.FullTokenizer(
       vocab_file=vocab_file, do_lower_case=do_lower_case)
 
@@ -138,14 +139,17 @@ def tokenize_dataset_dict(ec_dict, sentence=True, no_context=False, is_neeg=Fals
       return train_features
   
   train_sents = ec_dict['sentences']
-  train_triples = ec_dict['triples']
+
   candidates = ec_dict['candidates']
   correct_ending = ec_dict['correct']
   entity = ec_dict['entity']
-  if sentence == "True":
+  if sentence:
       train_features = convert_single_example2(tokenizer, train_sents[:-1], candidates, correct_ending, 
-                                               entity=entity, no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet)
+                                               entity=entity, max_seq_length=MAX_SEQ_LENGTH, 
+                                               no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet)
   else:
+      train_triples = ec_dict['triples']
       train_features = convert_single_example2(tokenizer, train_triples[:-1], candidates, correct_ending, 
-                                               entity=entity, no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet)
+                                               entity=entity, max_seq_length=MAX_SEQ_LENGTH,
+                                               no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet)
   return train_features
