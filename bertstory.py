@@ -10,6 +10,7 @@ parser.add_argument('--no_context', default=False, action='store_true')
 parser.add_argument('--neeg_dataset', default=False, action='store_true')
 parser.add_argument('--story_cloze', default=False, action='store_true')
 parser.add_argument('--candidates', type=int, default=5) # Narrative Cloze Task has 5 options
+parser.add_argument('--conceptnet', default=False, action='store_true')
 parser.add_argument('--input_size', type=int, default=10000)
 args = parser.parse_args()
 
@@ -33,28 +34,9 @@ import sys
 import prepare_data as prepare_data
 from prepare_data import tokenize_if_small_enough
 from read import *
-<<<<<<< HEAD
-import argparse
-
-parser = argparse.ArgumentParser(description='ScriptLearning')
-parser.add_argument('--data', type=str, default="dataset/gw_extractions_no_rep_no_fin.pickle")
-parser.add_argument('--sentence', type=str, default="True")
-parser.add_argument('--output_dir',type=str, default="output")
-parser.add_argument('--device', type=str, default="1")
-parser.add_argument('--no_context', default=False, action='store_true')
-parser.add_argument('--neeg_dataset', default=False, action='store_true')
-parser.add_argument('--conceptnet', default=False, action='store_true')
-
-parser.add_argument('--candidates', type=int, default=5) # Narrative Cloze Task has 5 options
-args = parser.parse_args()
 
 tf.logging.set_verbosity(tf.logging.INFO)
-os.environ['TFHUB_CACHE_DIR'] = '.'
-os.environ["CUDA_VISIBLE_DEVICES"] = args.device
-=======
 
-tf.logging.set_verbosity(tf.logging.INFO)
->>>>>>> stable
 # This is a path to an uncased (all lowercase) version of BERT
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
 
