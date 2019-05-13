@@ -79,7 +79,7 @@ for ec_dict in val_data:
 predict_set = list(
     prepare_data.tokenize_if_small_enough(check_dataset, sentences=args.sentence, no_context=args.no_context, is_neeg=args.neeg_dataset,
                                          conceptnet=args.conceptnet,
-                                          input_size=len(val_data)))
+                                          input_size=min(2000, len(val_data))))
 predict_input_fn = input_builder.input_fn_builder(
     features=predict_set,
     seq_length=MAX_SEQ_LENGTH,
@@ -93,7 +93,7 @@ bad = []
 for i, c in enumerate(check_dataset):
     r = list(prepare_data.tokenize_if_small_enough([c], sentences=args.sentence, no_context=args.no_context, is_neeg=args.neeg_dataset,
                                          conceptnet=args.conceptnet,
-                                          input_size=len(check_dataset)))
+                                          input_size=min(2000, len(check_dataset))))
     if not r:
         bad.append(i)
 
