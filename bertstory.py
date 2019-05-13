@@ -29,11 +29,11 @@ from bert import optimization
 from bert import tokenization
 from tensorflow import keras
 import re
-from model import *
+from new_model import initialize_vars, build_model
 import sys
 import prepare_data as prepare_data
 from prepare_data import tokenize_if_small_enough
-from read import *
+from read import story_read_data_iterator, read_data_iterator
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
