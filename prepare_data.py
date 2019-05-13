@@ -123,7 +123,7 @@ def convert_single_example2(tokenizer, event_chain, candidates, label, entity=No
       segment_id_list.append(segment_ids)
     
       if conceptnet:
-            vecs = [CONCEPTNET_TABLE.loc[tok] for tok in tokens if tok in CONCEPTNET_TABLE.index]
+            vecs = [CONCEPTNET_TABLE.loc[tok] for tok in candidate_tokens if tok in CONCEPTNET_TABLE.index]
             candidate_concept_vectors.append(vecs)
 
   feature = input_builder.InputFeatures(
