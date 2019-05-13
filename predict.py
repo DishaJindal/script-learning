@@ -91,7 +91,9 @@ predictions = estimator.predict(input_fn=predict_input_fn, yield_single_examples
 predictions_list = list(predictions)
 bad = []
 for i, c in enumerate(check_dataset):
-    r = list(prepare_data.tokenize_if_small_enough([c], sentences=args.sentence, no_context=args.no_context))
+    r = list(prepare_data.tokenize_if_small_enough([c], sentences=args.sentence, no_context=args.no_context, is_neeg=args.neeg_dataset,
+                                         conceptnet=args.conceptnet,
+                                          input_size=len(check_dataset)))
     if not r:
         bad.append(i)
 
