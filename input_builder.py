@@ -26,14 +26,20 @@ class InputFeatures(object):
                segment_ids,
                label_id,
                is_real_example=True,
-               augmenting_vectors=None
+               event_sentence_pos=None,
+               event_sentence_dep=None,
+               event_concept_vectors=None,
+               candidate_concept_vectors=None
               ):
     self.input_ids = input_ids
     self.input_mask = input_mask
     self.segment_ids = segment_ids
     self.label_id = label_id
     self.is_real_example = is_real_example
-    self.augmenting_vectors = augmenting_vectors
+    self.event_sentence_pos = event_sentence_pos
+    self.event_sentence_dep = event_sentence_dep
+    self.event_concept_vectors = event_concept_vectors
+    self.candidate_concept_vectors = candidate_concept_vectors
     
     def __repr__(self):
         return str(self.__dict__)
