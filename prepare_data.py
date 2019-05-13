@@ -11,6 +11,8 @@ from bert import tokenization
 from tensorflow import keras
 import os
 import re
+from functools import reduce
+import numpy as np
 
 import pandas as pd
 MAX_SEQ_LENGTH = 128
@@ -20,11 +22,16 @@ os.environ['TFHUB_CACHE_DIR'] = '.'
 # This is a path to an uncased (all lowercase) version of BERT
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
 
-def tokenize_if_small_enough(ds, sentences=True, no_context=False, is_neeg=False, input_size=10000):
+CONCEPTNET_TABLE = pd.read_hdf('dataset/mini.h5')
+CONCEPTNET_TABLE = CONCEPTNET_TABLE[CONCEPTNET_TABLE.index.map(lambda x: x.startswith('/c/en/'))]
+CONCEPTNET_TABLE.index = CONCEPTNET_TABLE.index.map(lambda x: x.replace('/c/en/', ''))
+
+def tokenize_if_small_enough(ds, sentences=True, no_context=True, is_neeg=False, conceptnet=False, input_size=10000):
 #     for d in ds:
     for i, d in zip(range(input_size), ds):
         try:
-            yield tokenize_dataset_dict(d, sentence=sentences, no_context=no_context, is_neeg=is_neeg)
+            yield tokenize_dataset_dict(d, sentence=sentences,
+                                        no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet)
         except AssertionError:
             continue
 
@@ -37,9 +44,10 @@ def create_tokenizer_from_hub_module():
     with tf.Session() as sess:
       vocab_file, do_lower_case = sess.run([tokenization_info["vocab_file"],
                                             tokenization_info["do_lower_case"]])
-      
+  
   return bert.tokenization.FullTokenizer(
       vocab_file=vocab_file, do_lower_case=do_lower_case)
+
 
 tokenizer = create_tokenizer_from_hub_module()
 def get_token_ids(sentence, tokenizer, entity=None, is_neeg=False):
@@ -70,7 +78,7 @@ def get_token_ids(sentence, tokenizer, entity=None, is_neeg=False):
     
 """# Make Data InputFeatures"""
 #If candidates is list of strings, entity can be None
-def convert_single_example2(tokenizer, event_chain, candidates, label, entity=None, max_seq_length=MAX_SEQ_LENGTH, no_context=False, is_neeg=False):
+def convert_single_example2(tokenizer, event_chain, candidates, label, entity=None, max_seq_length=MAX_SEQ_LENGTH, no_context=False, is_neeg=False, conceptnet=False):
   tokens_e = []
   segment_ids_e = []
   input_id_list = []
@@ -78,7 +86,7 @@ def convert_single_example2(tokenizer, event_chain, candidates, label, entity=No
   segment_id_list = []
   tokens_e.append("[CLS]")
   segment_ids_e.append(0)
-  
+  conceptnet_vector = [] if conceptnet else None
   # Fill Token Ids and Segment Ids from event chain
   if not no_context:
       for event in event_chain:
@@ -108,19 +116,26 @@ def convert_single_example2(tokenizer, event_chain, candidates, label, entity=No
       input_id_list.append(input_ids)
       input_mask_list.append(input_mask)
       segment_id_list.append(segment_ids)
-
+    
+      if conceptnet:
+            vecs = [CONCEPTNET_TABLE.loc[tok] for tok in tokens if tok in CONCEPTNET_TABLE.index]
+            cn = np.sum(vecs, axis=0) if vecs else np.zeros(300)
+            conceptnet_vector.append(cn)
+    
+  augmenting_vectors = conceptnet_vector
   feature = input_builder.InputFeatures(
           input_ids=input_id_list,
           input_mask=input_mask_list,
           segment_ids=segment_id_list,
           label_id=label,
+          augmenting_vectors=augmenting_vectors,
           is_real_example=True)
   return feature
 
-def tokenize_dataset_dict(ec_dict, sentence=True, no_context=False, is_neeg=False):
+def tokenize_dataset_dict(ec_dict, sentence=True, no_context=False, is_neeg=False, conceptnet=False):
   if is_neeg:
       train_features = convert_single_example2(tokenizer, ec_dict['chain'], ec_dict['candidates'], ec_dict['correct'], 
-                                               no_context=no_context, is_neeg=True)  
+                                               no_context=no_context, is_neeg=True, conceptnet=conceptnet)  
       return train_features
   
   train_sents = ec_dict['sentences']
@@ -130,9 +145,11 @@ def tokenize_dataset_dict(ec_dict, sentence=True, no_context=False, is_neeg=Fals
   entity = ec_dict['entity']
   if sentence:
       train_features = convert_single_example2(tokenizer, train_sents[:-1], candidates, correct_ending, 
-                                               entity=entity, max_seq_length=MAX_SEQ_LENGTH, no_context=no_context, is_neeg=is_neeg)
+                                               entity=entity, max_seq_length=MAX_SEQ_LENGTH, 
+                                               no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet)
   else:
       train_triples = ec_dict['triples']
       train_features = convert_single_example2(tokenizer, train_triples[:-1], candidates, correct_ending, 
-                                               entity=entity, max_seq_length=MAX_SEQ_LENGTH, no_context=no_context, is_neeg=is_neeg)
+                                               entity=entity, max_seq_length=MAX_SEQ_LENGTH,
+                                               no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet)
   return train_features

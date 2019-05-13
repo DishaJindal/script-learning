@@ -10,6 +10,7 @@ parser.add_argument('--no_context', default=False, action='store_true')
 parser.add_argument('--neeg_dataset', default=False, action='store_true')
 parser.add_argument('--story_cloze', default=False, action='store_true')
 parser.add_argument('--candidates', type=int, default=5) # Narrative Cloze Task has 5 options
+parser.add_argument('--conceptnet', default=False, action='store_true')
 parser.add_argument('--input_size', type=int, default=10000)
 args = parser.parse_args()
 
@@ -35,6 +36,7 @@ from prepare_data import tokenize_if_small_enough
 from read import *
 
 tf.logging.set_verbosity(tf.logging.INFO)
+
 # This is a path to an uncased (all lowercase) version of BERT
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
 
@@ -50,12 +52,16 @@ SAVE_SUMMARY_STEPS = 100
 MAX_SEQ_LENGTH = 128
 # Data Preparation
 current_time = datetime.now()
+
 if args.story_cloze:
     train_dataset = story_read_data_iterator(args.data)
-else:    
+else:
     train_dataset = read_data_iterator(args.data)
-          
-features = list(tokenize_if_small_enough(train_dataset, sentences=args.sentence, no_context=args.no_context, is_neeg=args.neeg_dataset, input_size=args.input_size))
+features = list(tokenize_if_small_enough(train_dataset,
+                                         args.sentence, args.no_context,
+                                         is_neeg=args.neeg_dataset,
+                                         conceptnet=args.conceptnet,
+                                         input_size=args.input_size))
 sample_size = len(features)
 training_pct = 0.8
 val_pct = 0.1

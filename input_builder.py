@@ -1,5 +1,5 @@
 import tensorflow as tf
-tf.enable_eager_execution()
+#tf.enable_eager_execution()
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import tensorflow_hub as hub
@@ -25,12 +25,15 @@ class InputFeatures(object):
                input_mask,
                segment_ids,
                label_id,
-               is_real_example=True):
+               is_real_example=True,
+               augmenting_vectors=None
+              ):
     self.input_ids = input_ids
     self.input_mask = input_mask
     self.segment_ids = segment_ids
     self.label_id = label_id
     self.is_real_example = is_real_example
+    self.augmenting_vectors = augmenting_vectors
     
     def __repr__(self):
         return str(self.__dict__)
