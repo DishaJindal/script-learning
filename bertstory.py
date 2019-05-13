@@ -41,7 +41,7 @@ BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
 
 BATCH_SIZE = 1
 LEARNING_RATE = 2e-5
-NUM_TRAIN_EPOCHS = 1.0
+NUM_TRAIN_EPOCHS = 5.0
 WARMUP_PROPORTION = 0.1 # Warmup is a period of time where hte learning rate is small and gradually increases--usually helps training.
 
 # Model configs
