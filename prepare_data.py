@@ -22,9 +22,9 @@ os.environ['TFHUB_CACHE_DIR'] = '.'
 # This is a path to an uncased (all lowercase) version of BERT
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
 
-CONCEPTNET_TABLE = pd.read_hdf('dataset/mini.h5')
-CONCEPTNET_TABLE = CONCEPTNET_TABLE[CONCEPTNET_TABLE.index.map(lambda x: x.startswith('/c/en/'))]
-CONCEPTNET_TABLE.index = CONCEPTNET_TABLE.index.map(lambda x: x.replace('/c/en/', ''))
+# CONCEPTNET_TABLE = pd.read_hdf('dataset/mini.h5')
+# CONCEPTNET_TABLE = CONCEPTNET_TABLE[CONCEPTNET_TABLE.index.map(lambda x: x.startswith('/c/en/'))]
+# CONCEPTNET_TABLE.index = CONCEPTNET_TABLE.index.map(lambda x: x.replace('/c/en/', ''))
 
 def tokenize_if_small_enough(ds, sentences=True, no_context=True, is_neeg=False, conceptnet=False, input_size=10000):
 #     for d in ds:

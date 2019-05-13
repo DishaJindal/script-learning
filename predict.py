@@ -3,7 +3,6 @@ import os
 
 parser = argparse.ArgumentParser(description='ScriptLearning')
 parser.add_argument('--data', type=str, default="dataset/gw_extractions_no_rep_no_fin.pickle")  # 1
-parser.add_argument('--output_dir', type=str, default="output")
 parser.add_argument('--device', type=str, default="1")
 
 parser.add_argument('--sentence', default=False, action='store_true')
@@ -27,7 +26,6 @@ import numpy as np
 import model
 import tensorflow as tf
 
-tf.enable_eager_execution()
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import tensorflow_hub as hub
@@ -79,7 +77,8 @@ for ec_dict in val_data:
     check_dataset.append(ec_dict)
 
 predict_set = list(
-    prepare_data.tokenize_if_small_enough(check_dataset, sentences=args.sentence, no_context=args.no_context,
+    prepare_data.tokenize_if_small_enough(check_dataset, sentences=args.sentence, no_context=args.no_context, is_neeg=args.neeg_dataset,
+                                         conceptnet=args.conceptnet,
                                           input_size=len(val_data)))
 predict_input_fn = input_builder.input_fn_builder(
     features=predict_set,
