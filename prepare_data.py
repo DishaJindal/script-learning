@@ -158,3 +158,16 @@ def tokenize_dataset_dict(ec_dict, sentence=True, no_context=False, is_neeg=Fals
                                                entity=entity, max_seq_length=MAX_SEQ_LENGTH,
                                                no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet)
   return train_features
+
+
+def pad_to_max_of_max(ls_ls):
+    inner_max_pad = max([max([np.array(t).shape for t in twe], key=lambda x:x[0])[0] 
+                   for twe in ls_ls])
+    inner_maxed = [np.array([np.pad(np.array(a), ((0, inner_max_pad-np.array(a).shape[0]), (0, 0)), mode='constant') for a in ls]) for ls in ls_ls]
+    outer_max = max((e.shape[0] for e in inner_maxed))
+    return np.array([np.pad(e, ((0, outer_max-e.shape[0]), (0, 0), (0, 0)), mode='constant') for e in inner_maxed])
+    
+def pad_to_max(ls):
+    ls = [np.array(e) for e in ls]
+    max_pad = max((e.shape[0] for e in ls))
+    return np.array([np.pad(e, ((0, max_pad-e.shape[0]), (0, 0)), mode='constant') for e in ls])

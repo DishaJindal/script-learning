@@ -4,6 +4,8 @@ import bert
 from bert import optimization
 from bert import tokenization
 from tensorflow import keras
+from tensorflow.keras import layers, models
+from tensorflow.keras import backend as K
 import re
 import prepare_data as prepare_data
 from prepare_data import tokenize_if_small_enough
