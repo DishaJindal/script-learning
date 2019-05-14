@@ -12,6 +12,7 @@ parser.add_argument('--no_context', default=False, action='store_true')
 parser.add_argument('--neeg_dataset', default=False, action='store_true')
 parser.add_argument('--story_cloze', default=False, action='store_true')
 parser.add_argument('--conceptnet', default=False, action='store_true')
+parser.add_argument('--semantic', default=False, action='store_true')
 args = parser.parse_args()
 
 os.environ['TFHUB_CACHE_DIR'] = '.'
@@ -48,7 +49,6 @@ estimator = tf.estimator.Estimator(
     config=run_config,
     params={"batch_size": BATCH_SIZE})
 
-
 if args.story_cloze:
     dataset = list(story_read_data_iterator(args.data))
 else:
@@ -58,15 +58,21 @@ check_dataset = val_dataset[:min(2000, len(val_dataset))]
 print("Prediction Set Size: {}", len(check_dataset))
 
 predict_set = list(
-    prepare_data.tokenize_if_small_enough(check_dataset, sentences=args.sentence, no_context=args.no_context, is_neeg=args.neeg_dataset,
-                                         conceptnet=args.conceptnet,
+    prepare_data.tokenize_if_small_enough(check_dataset,
+                                          sentences=args.sentence,
+                                          no_context=args.no_context,
+                                          is_neeg=args.neeg_dataset,
+                                          conceptnet=args.conceptnet,
+                                          semantic=args.semantic,
                                           input_size=len(check_dataset)))
 
 bad = []
 for i, c in enumerate(check_dataset):
-    r = list(prepare_data.tokenize_if_small_enough([c], sentences=args.sentence, no_context=args.no_context,
+    r = list(prepare_data.tokenize_if_small_enough([c], sentences=args.sentence,
+                                                   no_context=args.no_context,
                                                    is_neeg=args.neeg_dataset,
                                                    conceptnet=args.conceptnet,
+                                                   semantic=args.semantic,
                                                    input_size=1))
     if not r:
         bad.append(i)
