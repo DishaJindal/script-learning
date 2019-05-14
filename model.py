@@ -42,14 +42,12 @@ def create_model3(is_predicting, input_ids, input_mask, segment_ids, labels,
     # Use "pooled_output" for classification tasks on an entire sentence.
     # Use "sequence_outputs" for token-level output.
     output_layer_temp = bert_outputs["pooled_output"]
-    if augmenting_vectors is not None:
-        output_layer_temp = tf.concat([output_layer_temp, augmenting_vectors[i]], axis=1) 
     
     if i == 0:
         output_layer = output_layer_temp
     else:
         output_layer = tf.concat([output_layer, output_layer_temp], axis=1) 
-  
+  output_layer = tf.concat([output_layer, augmenting_vectors], axis=1) 
   hidden_size = output_layer.shape[-1].value
 #   set_trace()
 
@@ -93,7 +91,8 @@ def model_fn_builder(num_labels, learning_rate, num_train_steps, num_warmup_step
     input_mask = features["input_mask"]
     segment_ids = features["segment_ids"]
     label_ids = features["label_ids"]
-    augmenting_vectors = features.get('augmenting_vectors', None)
+    augmenting_vectors = features["augmented_vector"]
+    print(augmenting_vectors)
 
     is_predicting = (mode == tf.estimator.ModeKeys.PREDICT)
     

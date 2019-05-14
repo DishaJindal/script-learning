@@ -16,6 +16,7 @@ from model import *
 from prepare_data import *
 import prepare_data
 from read import *
+import numpy as np
 
 class InputFeatures(object):
   """A single set of features of data."""
@@ -26,14 +27,14 @@ class InputFeatures(object):
                segment_ids,
                label_id,
                is_real_example=True,
-               augmenting_vectors=None
+               augmented_vector=None
               ):
     self.input_ids = input_ids
     self.input_mask = input_mask
     self.segment_ids = segment_ids
     self.label_id = label_id
     self.is_real_example = is_real_example
-    self.augmenting_vectors = augmenting_vectors
+    self.augmented_vector = augmented_vector
     
     def __repr__(self):
         return str(self.__dict__)
@@ -51,12 +52,15 @@ def input_fn_builder(features, seq_length, is_training, drop_remainder, candidat
   all_input_mask = []
   all_segment_ids = []
   all_label_ids = []
+  all_augmented_vector = []
+
 
   for feature in features:
     all_input_ids.append(feature.input_ids)
     all_input_mask.append(feature.input_mask)
     all_segment_ids.append(feature.segment_ids)
     all_label_ids.append(feature.label_id)
+    all_augmented_vector.append(feature.augmented_vector)
   
   def input_fn(params):
     """The actual input function."""
@@ -84,6 +88,11 @@ def input_fn_builder(features, seq_length, is_training, drop_remainder, candidat
                 dtype=tf.int32),
         "label_ids":
             tf.constant(all_label_ids, shape=[num_examples], dtype=tf.int32),
+        "augmented_vector":
+            tf.constant(
+                np.array(all_augmented_vector), 
+                shape=[num_examples, all_augmented_vector[0].shape[0]], 
+                dtype=tf.float32)
     })
 
     if is_training:
