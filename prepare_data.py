@@ -136,10 +136,12 @@ def convert_single_example2(tokenizer, event_chain, candidates, label, entity=No
       else:
           pos_features.extend([np.zeros(pos_features[0].shape)] * (max_sent - len(pos_features)))
           dep_features.extend([np.zeros(dep_features[0].shape)] * (max_sent - len(dep_features)))
-      pos_features_vectors = pos_features
-      dep_features_vectors = dep_features
+      pos_features_vectors = np.concatenate(pos_features)
+      dep_features_vectors = np.concatenate(dep_features)
+      #pos_features_vectors = pos_features
+      #dep_features_vectors = dep_features
   augmented = np.concatenate((pos_features_vectors, dep_features_vectors, event_concept_vectors, candidate_concept_vectors), axis=0)
-  print("Applying ConceptNet: {} Semantic{} Augmented Vector Shape", conceptnet, semantic, len(augmented))
+  #print("Applying ConceptNet: {} Semantic{} Augmented Vector Shape", conceptnet, semantic, len(augmented))
   feature = input_builder.InputFeatures(
           input_ids=input_id_list,
           input_mask=input_mask_list,
