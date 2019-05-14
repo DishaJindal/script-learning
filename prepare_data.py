@@ -149,12 +149,12 @@ def tokenize_dataset_dict(ec_dict, sentence=True, no_context=False, is_neeg=Fals
   correct_ending = ec_dict['correct']
   entity = ec_dict['entity']
   if sentence:
-      train_features = convert_single_example2(tokenizer, train_sents[:-1], candidates, correct_ending, 
+      train_features = convert_single_example2(tokenizer, train_sents, candidates, correct_ending,
                                                entity=entity, max_seq_length=MAX_SEQ_LENGTH, 
                                                no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet, pos_features=ec_dict['pos'], dep_features=ec_dict['dep'])
   else:
       train_triples = ec_dict['triples']
-      train_features = convert_single_example2(tokenizer, train_triples[:-1], candidates, correct_ending, 
+      train_features = convert_single_example2(tokenizer, train_triples, candidates, correct_ending,
                                                entity=entity, max_seq_length=MAX_SEQ_LENGTH,
                                                no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet)
   return train_features
