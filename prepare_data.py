@@ -7,7 +7,7 @@ import os
 import numpy as np
 import pandas as pd
 
-MAX_SEQ_LENGTH = 128
+MAX_SEQ_LENGTH = 256
 
 os.environ['TFHUB_CACHE_DIR'] = '.'
 BERT_MODEL_HUB = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
