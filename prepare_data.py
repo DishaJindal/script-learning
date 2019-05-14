@@ -67,7 +67,7 @@ def get_token_ids(sentence, tokenizer, entity=None, is_neeg=False):
     
 """# Make Data InputFeatures"""
 #If candidates is list of strings, entity can be None
-def convert_single_example2(tokenizer, event_chain, candidates, label, entity=None, max_seq_length=MAX_SEQ_LENGTH, no_context=False, is_neeg=False, conceptnet=False, semantic=False,pos_features=[], dep_features=[], max_sent=10, max_words=50):
+def convert_single_example2(tokenizer, event_chain, candidates, label, entity=None, max_seq_length=MAX_SEQ_LENGTH, no_context=False, is_neeg=False, conceptnet=False, semantic=False, pos_features=[], dep_features=[], max_sent=10, max_words=50):
   tokens_e = []
   segment_ids_e = []
   input_id_list = []
@@ -77,6 +77,8 @@ def convert_single_example2(tokenizer, event_chain, candidates, label, entity=No
   segment_ids_e.append(0)
   candidate_concept_vectors = [] 
   event_concept_vectors = []
+  pos_features_vectors = []
+  dep_features_vectors = []
   # Fill Token Ids and Segment Ids from event chain
   if not no_context:
       for event in event_chain:
@@ -134,14 +136,16 @@ def convert_single_example2(tokenizer, event_chain, candidates, label, entity=No
       else:
           pos_features.extend([np.zeros(pos_features[0].shape)] * (max_sent - len(pos_features)))
           dep_features.extend([np.zeros(dep_features[0].shape)] * (max_sent - len(dep_features)))
-      pos_features = np.concatenate(pos_features)
-      dep_features = np.concatenate(dep_features)
+      pos_features_vectors = pos_features
+      dep_features_vectors = dep_features
+  augmented = np.concatenate((pos_features_vectors, dep_features_vectors, event_concept_vectors, candidate_concept_vectors), axis=0)
+  print("Applying ConceptNet: {} Semantic{} Augmented Vector Shape", conceptnet, semantic, len(augmented))
   feature = input_builder.InputFeatures(
           input_ids=input_id_list,
           input_mask=input_mask_list,
           segment_ids=segment_id_list,
           label_id=label,
-          augmented_vector=np.concatenate((pos_features, dep_features, event_concept_vectors,candidate_concept_vectors), axis=0),
+          augmented_vector=augmented,
           is_real_example=True)
   return feature
 
