@@ -77,8 +77,8 @@ def convert_single_example2(tokenizer, event_chain, candidates, label, entity=No
   segment_ids_e.append(0)
   candidate_concept_vectors = [] 
   event_concept_vectors = []
-  pos_features_vectors = []
-  dep_features_vectors = []
+  pos_features_vectors = np.array([])
+  dep_features_vectors = np.array([])
   # Fill Token Ids and Segment Ids from event chain
   if not no_context:
       for event in event_chain:
@@ -118,10 +118,10 @@ def convert_single_example2(tokenizer, event_chain, candidates, label, entity=No
             candidate_concept_vectors.extend(vecs)
   
   if conceptnet:
-      if len(event_concept_vectors) > max_sent:
-          event_concept_vectors = event_concept_vectors[:max_sent]
+      if len(event_concept_vectors) > max_words:
+          event_concept_vectors = event_concept_vectors[:max_words]
       else:
-          event_concept_vectors.extend([np.zeros(300)] * (max_sent - len(candidate_concept_vectors)))
+          event_concept_vectors.extend([np.zeros(300)] * (max_words - len(event_concept_vectors)))
     
       event_concept_vectors = np.concatenate(event_concept_vectors)
       if len(candidate_concept_vectors) > max_sent:
@@ -138,8 +138,9 @@ def convert_single_example2(tokenizer, event_chain, candidates, label, entity=No
           dep_features.extend([np.zeros(dep_features[0].shape)] * (max_sent - len(dep_features)))
       pos_features_vectors = np.concatenate(pos_features)
       dep_features_vectors = np.concatenate(dep_features)
-      #pos_features_vectors = pos_features
-      #dep_features_vectors = dep_features
+
+  if conceptnet and ((event_concept_vectors.shape[0] != 300 * max_words) or (candidate_concept_vectors.shape[0] != 300 * max_sent)):
+      print("BAD AUG SIZE:", pos_features_vectors.shape, dep_features_vectors.shape, event_concept_vectors.shape, candidate_concept_vectors.shape)
   augmented = np.concatenate((pos_features_vectors, dep_features_vectors, event_concept_vectors, candidate_concept_vectors), axis=0)
   #print("Applying ConceptNet: {} Semantic{} Augmented Vector Shape", conceptnet, semantic, len(augmented))
   feature = input_builder.InputFeatures(
