@@ -20,19 +20,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = args.device
 
 import tensorflow as tf
 tf.enable_eager_execution()
-from sklearn.model_selection import train_test_split
-import pandas as pd
-import tensorflow_hub as hub
-from datetime import datetime
-from pdb import set_trace
-import bert
-from bert import optimization
-from bert import tokenization
-from tensorflow import keras
-import re
 from model import *
-import sys
-import prepare_data as prepare_data
 from prepare_data import tokenize_if_small_enough
 from read import *
 

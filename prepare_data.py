@@ -1,20 +1,12 @@
-from sklearn.model_selection import train_test_split
-import pandas as pd
 import tensorflow as tf
 import tensorflow_hub as hub
-from datetime import datetime
 from pdb import set_trace
 import bert
 import input_builder
-from bert import optimization
-from bert import tokenization
-from tensorflow import keras
 import os
-import re
-from functools import reduce
 import numpy as np
-
 import pandas as pd
+
 MAX_SEQ_LENGTH = 128
 
 os.environ['TFHUB_CACHE_DIR'] = '.'
@@ -24,11 +16,11 @@ CONCEPTNET_TABLE = pd.read_hdf('dataset/mini.h5')
 CONCEPTNET_TABLE = CONCEPTNET_TABLE[CONCEPTNET_TABLE.index.map(lambda x: x.startswith('/c/en/'))]
 CONCEPTNET_TABLE.index = CONCEPTNET_TABLE.index.map(lambda x: x.replace('/c/en/', ''))
 
-def tokenize_if_small_enough(ds, sentences=True, no_context=True, is_neeg=False, conceptnet=False,semantic=False, input_size=10000):
+def tokenize_if_small_enough(ds, sentences=True, no_context=True, is_neeg=False, conceptnet=False, semantic=False, input_size=10000):
     for i, d in zip(range(input_size), ds):
         try:
             yield tokenize_dataset_dict(d, sentence=sentences,
-                                        no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet,semantic=semantic)
+                                        no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet, semantic=semantic)
         except AssertionError:
             continue
 
@@ -135,22 +127,15 @@ def convert_single_example2(tokenizer, event_chain, candidates, label, entity=No
       else:
           candidate_concept_vectors.extend([np.zeros(300)] * (max_sent - len(candidate_concept_vectors)))
       candidate_concept_vectors = np.concatenate(candidate_concept_vectors)
-  if pos_features is not None:
+  if pos_features is not None and semantic:
       if len(pos_features) > max_sent:
           pos_features = pos_features[:max_sent]
           dep_features = dep_features[:max_sent]
       else:
           pos_features.extend([np.zeros(pos_features[0].shape)] * (max_sent - len(pos_features)))
-          dep_features.extend([np.zeros(dep_features[0].shape)]  * (max_sent - len(dep_features)))
+          dep_features.extend([np.zeros(dep_features[0].shape)] * (max_sent - len(dep_features)))
       pos_features = np.concatenate(pos_features)
       dep_features = np.concatenate(dep_features)
-  augmented_vector = []
-  if conceptnet and semantic:
-        augmented_vector=np.concatenate((pos_features, dep_features, event_concept_vectors, candidate_concept_vectors), axis=0)
-  elif conceptnet:
-        augmented_vector=np.concatenate((pos_features, dep_features, event_concept_vectors, candidate_concept_vectors), axis=0)
-  elif semantic:
-        augmented_vector=np.concatenate((pos_features, dep_features, event_concept_vectors, candidate_concept_vectors), axis=0) 
   feature = input_builder.InputFeatures(
           input_ids=input_id_list,
           input_mask=input_mask_list,
@@ -163,7 +148,7 @@ def convert_single_example2(tokenizer, event_chain, candidates, label, entity=No
 def tokenize_dataset_dict(ec_dict, sentence=True, no_context=False, is_neeg=False, conceptnet=False, semantic=False):
   if is_neeg:
       train_features = convert_single_example2(tokenizer, ec_dict['chain'], ec_dict['candidates'], ec_dict['correct'], 
-                                               no_context=no_context, is_neeg=True, conceptnet=conceptnet,semantic=semantic)  
+                                               no_context=no_context, is_neeg=True, conceptnet=conceptnet)
       return train_features
   
   train_sents = ec_dict['sentences']
@@ -174,7 +159,7 @@ def tokenize_dataset_dict(ec_dict, sentence=True, no_context=False, is_neeg=Fals
       train_features = convert_single_example2(tokenizer, train_sents, candidates, correct_ending,
                                                entity=entity, max_seq_length=MAX_SEQ_LENGTH, 
                                                no_context=no_context, is_neeg=is_neeg, conceptnet=conceptnet,
-                                               semantic=semantic,pos_features=ec_dict['pos'], dep_features=ec_dict['dep'])
+                                               semantic=semantic, pos_features=ec_dict['pos'], dep_features=ec_dict['dep'])
   else:
       train_triples = ec_dict['triples']
       train_features = convert_single_example2(tokenizer, train_triples, candidates, correct_ending,
